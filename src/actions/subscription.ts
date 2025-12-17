@@ -13,7 +13,6 @@ const createTypedClient = async () => {
 
 export async function getPlans() {
   const supabase = await createTypedClient();
-  // @ts-ignore: plans table not in generated types
   const { data } = await supabase
     .from("plans")
     .select("*")
@@ -36,14 +35,14 @@ export async function startTrialAction(planId: string) {
     .eq("user_id", user.id)
     .single();
 
-  if (existing && (existing.status === "active" || existing.trial_end)) {
-    // If checking for "ever used trial", we might need a flag. For now, block if anything exists.
-    // In dev we might delete rows to test.
+  if (
+    existing &&
+    (existing.status === "active" || existing.current_period_end)
+  ) {
     return { error: "You already have an active subscription or trial." };
   }
 
   // Fetch plan
-  // @ts-ignore
   const { data: plan } = await supabase
     .from("plans")
     .select("*")
@@ -51,20 +50,18 @@ export async function startTrialAction(planId: string) {
     .single();
 
   if (!plan) return { error: "Invalid plan." };
-  // @ts-ignore
+
   if (!plan.trial_days || plan.trial_days <= 0) {
     return { error: "This plan does not offer a free trial." };
   }
 
-  // @ts-ignore
   const trialEnd = addDays(new Date(), plan.trial_days);
 
   const { error } = await supabase.from("subscriptions").insert({
     user_id: user.id,
-    plan_id: planId,
+    plan: "pro",
     status: "active", // Active access during trial
-    trial_start: new Date().toISOString(),
-    trial_end: trialEnd.toISOString(),
+    current_period_end: trialEnd.toISOString(),
   });
 
   if (error) return { error: error.message };
@@ -80,19 +77,17 @@ export async function createSubscriptionAction(planId: string) {
   if (!user) redirect("/login");
 
   // 1. Fetch Plan details
-  // @ts-ignore
+
   const { data: plan } = await supabase
     .from("plans")
     .select("*")
     .eq("id", planId)
     .single();
 
-  // @ts-ignore
   if (!plan || !plan.razorpay_plan_id) {
     return { error: "Plan configuration missing." };
   }
 
-  // @ts-ignore
   if (plan.razorpay_plan_id.includes("placeholder")) {
     return {
       error:
@@ -107,11 +102,7 @@ export async function createSubscriptionAction(planId: string) {
     .eq("user_id", user.id)
     .single();
 
-  if (
-    existingSub &&
-    existingSub.status === "active" &&
-    !existingSub.trial_end
-  ) {
+  if (existingSub && existingSub.status === "active") {
     // Already fully paid active (not just trial)
     return { error: "You are already subscribed to Pro." };
   }
@@ -119,7 +110,6 @@ export async function createSubscriptionAction(planId: string) {
   try {
     // 3. Create a Razorpay Subscription
     const subscription = await razorpay.subscriptions.create({
-      // @ts-ignore
       plan_id: plan.razorpay_plan_id,
       customer_notify: 1,
       total_count: 120, // 10 years monthly
@@ -136,12 +126,14 @@ export async function createSubscriptionAction(planId: string) {
       subscriptionId: subscription.id,
       key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error creating subscription:", error);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const err = error as any; // Temporary safe cast to access dynamic properties if needed, or better validation
     return {
       error:
-        error?.error?.description ||
-        error?.message ||
+        err?.error?.description ||
+        err?.message ||
         "Failed to create subscription",
     };
   }
@@ -155,7 +147,6 @@ export async function getSubscription() {
 
   if (!user) return null;
 
-  // @ts-ignore
   const { data } = await supabase
     .from("subscriptions")
     .select("*, plans(*)")

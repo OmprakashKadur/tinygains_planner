@@ -1,18 +1,14 @@
 "use client";
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import Link from "next/link";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { cn } from "@/lib/utils";
 import {
   addYears,
   addMonths,
   addWeeks,
   addDays,
   format,
-  parseISO,
-  startOfWeek,
-  endOfWeek,
+  getISOWeek,
 } from "date-fns";
 
 interface PlannerHeaderProps {
@@ -37,7 +33,7 @@ export function PlannerHeader({
   const handleNavigate = (direction: "prev" | "next") => {
     const modifier = direction === "prev" ? -1 : 1;
     let newDate = new Date(date);
-    let params = new URLSearchParams(searchParams.toString());
+    const params = new URLSearchParams(searchParams.toString());
 
     switch (type) {
       case "year":
@@ -65,7 +61,6 @@ export function PlannerHeader({
         // If we use 'date' param everywhere it's easier, but we used split params.
         // Let's try to update params directly if possible.
         // Getting week number client side:
-        const { getWeek, getISOWeek } = require("date-fns"); // Dynamic require to avoid build issues if missing? No, should be fine.
         params.set("week", getISOWeek(newDate).toString());
         break;
       case "day":
@@ -80,7 +75,7 @@ export function PlannerHeader({
   return (
     <div className="flex items-start justify-between">
       <div>
-        <h1 className="text-display-small font-bold text-on-surface">
+        <h1 className="text-display-small text-on-surface font-bold">
           {title}
         </h1>
         {subtitle && (
@@ -88,24 +83,24 @@ export function PlannerHeader({
         )}
       </div>
       {showNavigation && (
-        <div className="flex items-center gap-1 bg-surface-container-high rounded-full p-1">
+        <div className="bg-surface-container-high flex items-center gap-1 rounded-full p-1">
           <button
             onClick={() => handleNavigate("prev")}
-            className="p-2 hover:bg-surface-container-highest rounded-full transition-colors text-on-surface"
+            className="hover:bg-surface-container-highest text-on-surface rounded-full p-2 transition-colors"
           >
-            <ChevronLeft className="w-5 h-5" />
+            <ChevronLeft className="h-5 w-5" />
           </button>
           <button
             onClick={() => router.push(pathname)}
-            className="px-3 text-sm font-medium text-on-surface-variant hover:text-primary transition-colors"
+            className="text-on-surface-variant hover:text-primary px-3 text-sm font-medium transition-colors"
           >
             Today
           </button>
           <button
             onClick={() => handleNavigate("next")}
-            className="p-2 hover:bg-surface-container-highest rounded-full transition-colors text-on-surface"
+            className="hover:bg-surface-container-highest text-on-surface rounded-full p-2 transition-colors"
           >
-            <ChevronRight className="w-5 h-5" />
+            <ChevronRight className="h-5 w-5" />
           </button>
         </div>
       )}

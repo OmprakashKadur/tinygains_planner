@@ -40,7 +40,7 @@ export interface Database {
             columns: ["id"];
             referencedRelation: "users";
             referencedColumns: ["id"];
-          }
+          },
         ];
       };
       yearly_goals: {
@@ -80,7 +80,7 @@ export interface Database {
             columns: ["user_id"];
             referencedRelation: "users";
             referencedColumns: ["id"];
-          }
+          },
         ];
       };
       monthly_goals: {
@@ -126,7 +126,7 @@ export interface Database {
             columns: ["yearly_goal_id"];
             referencedRelation: "yearly_goals";
             referencedColumns: ["id"];
-          }
+          },
         ];
       };
       weekly_goals: {
@@ -172,7 +172,7 @@ export interface Database {
             columns: ["monthly_goal_id"];
             referencedRelation: "monthly_goals";
             referencedColumns: ["id"];
-          }
+          },
         ];
       };
       daily_goals: {
@@ -218,7 +218,7 @@ export interface Database {
             columns: ["weekly_goal_id"];
             referencedRelation: "weekly_goals";
             referencedColumns: ["id"];
-          }
+          },
         ];
       };
       daily_intents: {
@@ -261,7 +261,7 @@ export interface Database {
             columns: ["week_goal_id"];
             referencedRelation: "weekly_goals";
             referencedColumns: ["id"];
-          }
+          },
         ];
       };
       focus_blocks: {
@@ -301,7 +301,7 @@ export interface Database {
             columns: ["user_id"];
             referencedRelation: "users";
             referencedColumns: ["id"];
-          }
+          },
         ];
       };
       focus_sessions: {
@@ -341,7 +341,7 @@ export interface Database {
             columns: ["block_id"];
             referencedRelation: "focus_blocks";
             referencedColumns: ["id"];
-          }
+          },
         ];
       };
       daily_reflections: {
@@ -378,7 +378,7 @@ export interface Database {
             columns: ["user_id"];
             referencedRelation: "users";
             referencedColumns: ["id"];
-          }
+          },
         ];
       };
       subscriptions: {
@@ -418,8 +418,47 @@ export interface Database {
             columns: ["user_id"];
             referencedRelation: "users";
             referencedColumns: ["id"];
-          }
+          },
         ];
+      };
+      plans: {
+        Row: {
+          id: string;
+          name: string;
+          description: string | null;
+          price: number;
+          active: boolean;
+          trial_days: number | null;
+          razorpay_plan_id: string | null;
+          features: string[] | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          description?: string | null;
+          price: number;
+          active?: boolean;
+          trial_days?: number | null;
+          razorpay_plan_id?: string | null;
+          features?: string[] | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          description?: string | null;
+          price?: number;
+          active?: boolean;
+          trial_days?: number | null;
+          razorpay_plan_id?: string | null;
+          features?: string[] | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
       };
     };
     Views: {
