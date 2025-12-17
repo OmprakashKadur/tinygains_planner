@@ -8,34 +8,65 @@ import {
 import { useEffect, useState } from "react";
 import { Check, Loader2, AlertCircle } from "lucide-react"; // Added AlertCircle
 import Script from "next/script";
-import { useRouter } from "next/navigation";
 
 // Razorpay types (simplified)
+interface RazorpayResponse {
+  razorpay_payment_id: string;
+  razorpay_subscription_id: string;
+  razorpay_signature: string;
+}
+
+interface RazorpayOptions {
+  key: string;
+  subscription_id: string;
+  name: string;
+  description: string;
+  handler: (response: RazorpayResponse) => void;
+  modal: {
+    ondismiss: () => void;
+  };
+  theme: {
+    color: string;
+  };
+}
+
 declare global {
   interface Window {
-    Razorpay: any;
+    Razorpay: new (options: RazorpayOptions) => { open: () => void };
   }
 }
 
+interface Plan {
+  id: string;
+  name: string;
+  price: number;
+  offer_text?: string;
+  interval: string;
+}
+
+interface Subscription {
+  status: string;
+  trial_end?: string;
+}
+
 export default function PricingPage() {
-  const router = useRouter();
   const [loadingPlanId, setLoadingPlanId] = useState<string | null>(null);
-  const [plans, setPlans] = useState<any[]>([]);
-  const [subscription, setSubscription] = useState<any>(null); // Added subscription state
+  const [plans, setPlans] = useState<Plan[]>([]);
+  const [subscription, setSubscription] = useState<Subscription | null>(null); // Added subscription state
   const [isFetching, setIsFetching] = useState(true);
 
   useEffect(() => {
     // Fetch both plans and subscription status
     Promise.all([getPlans(), getSubscription()]).then(
       ([plansData, subData]) => {
-        setPlans(plansData || []);
-        setSubscription(subData);
+        setPlans((plansData as unknown as Plan[]) || []);
+        setSubscription(subData as Subscription);
         setIsFetching(false);
       }
     );
   }, []);
 
-  const handleAction = async (plan: any) => {
+  const handleAction = async (plan: Plan) => {
     setLoadingPlanId(plan.id);
 
     // Direct Payment Logic (Trial is assumed to be auto-assigned on signup or not explicitly started via button)
@@ -53,7 +84,7 @@ export default function PricingPage() {
         subscription_id: result.subscriptionId,
         name: "FocusFlow Pro",
         description: plan.name,
-        handler: function (response: any) {
+        handler: function (response: RazorpayResponse) {
           alert(
             "Subscription Successful! Payment ID: " +
               response.razorpay_payment_id
@@ -70,7 +101,7 @@ export default function PricingPage() {
         },
       };
 
-      const rzp = new window.Razorpay(options);
+      const rzp = new window.Razorpay(options as unknown as RazorpayOptions);
       rzp.open();
     } else {
       setLoadingPlanId(null);
@@ -110,22 +141,22 @@ export default function PricingPage() {
 
   if (isFetching) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      <div className="flex min-h-screen items-center justify-center">
+        <Loader2 className="text-primary h-8 w-8 animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen px-4 py-12 sm:px-6 lg:px-8">
       {/* Trial Banner */}
       {isTrialActive && (
-        <div className="max-w-5xl mx-auto mb-8 bg-green-500/10 border border-green-500/30 text-green-700 dark:text-green-300 px-6 py-4 rounded-xl flex items-center gap-4 shadow-sm animate-in fade-in slide-in-from-top-4">
-          <div className="p-2 bg-green-500/20 rounded-full">
-            <AlertCircle className="w-6 h-6" />
+        <div className="animate-in fade-in slide-in-from-top-4 mx-auto mb-8 flex max-w-5xl items-center gap-4 rounded-xl border border-green-500/30 bg-green-500/10 px-6 py-4 text-green-700 shadow-sm dark:text-green-300">
+          <div className="rounded-full bg-green-500/20 p-2">
+            <AlertCircle className="h-6 w-6" />
           </div>
           <div>
-            <div className="font-bold text-lg">7-Day Free Trial Active</div>
+            <div className="text-lg font-bold">7-Day Free Trial Active</div>
             <div className="text-sm opacity-90">
               You have full Pro access. Your trial expires in{" "}
               <span className="font-bold underline">{getDaysLeft()} days</span>.
@@ -135,43 +166,43 @@ export default function PricingPage() {
         </div>
       )}
 
-      <div className="text-center mb-12">
+      <div className="mb-12 text-center">
         <h1 className="text-4xl font-extrabold tracking-tight">
           Simple Pricing
         </h1>
-        <p className="mt-4 text-xl text-muted-foreground">
+        <p className="text-muted-foreground mt-4 text-xl">
           Invest in your focus.
         </p>
       </div>
 
-      <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
+      <div className="mx-auto grid max-w-5xl grid-cols-1 gap-8 md:grid-cols-2">
         {/* Monthly Plan */}
-        <div className="bg-card border p-8 rounded-xl shadow-sm flex flex-col relative overflow-hidden">
-          <div className="absolute top-0 left-0 bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-br-lg">
+        <div className="bg-card relative flex flex-col overflow-hidden rounded-xl border p-8 shadow-sm">
+          <div className="absolute top-0 left-0 rounded-br-lg bg-green-500 px-3 py-1 text-xs font-bold text-white">
             {monthly.offer_text}
           </div>
           <h3 className="text-2xl font-bold">{monthly.name}</h3>
           <div className="mt-4">
-            <span className="text-xl text-muted-foreground line-through mr-2">
+            <span className="text-muted-foreground mr-2 text-xl line-through">
               ₹99
             </span>
             <span className="text-4xl font-bold">₹{monthly.price}</span>
-            <span className="text-lg font-normal text-muted-foreground">
+            <span className="text-muted-foreground text-lg font-normal">
               /{monthly.interval === "month" ? "mo" : monthly.interval}
             </span>
           </div>
-          <ul className="mt-8 space-y-4 flex-1">
+          <ul className="mt-8 flex-1 space-y-4">
             <li className="flex items-center gap-2">
-              <Check className="w-5 h-5 text-green-500" /> Unlock all features
+              <Check className="h-5 w-5 text-green-500" /> Unlock all features
             </li>
             <li className="flex items-center gap-2">
-              <Check className="w-5 h-5 text-green-500" /> Cancel anytime
+              <Check className="h-5 w-5 text-green-500" /> Cancel anytime
             </li>
           </ul>
           <button
             onClick={() => handleAction(monthly)}
             disabled={loadingPlanId !== null}
-            className="mt-8 w-full py-3 rounded-lg border border-primary text-primary font-bold hover:bg-primary/5 transition-colors disabled:opacity-70"
+            className="border-primary text-primary hover:bg-primary/5 mt-8 w-full rounded-lg border py-3 font-bold transition-colors disabled:opacity-70"
           >
             {loadingPlanId === monthly.id
               ? "Processing..."
@@ -180,8 +211,8 @@ export default function PricingPage() {
         </div>
 
         {/* Yearly Plan */}
-        <div className="bg-primary text-primary-foreground p-8 rounded-xl shadow-lg flex flex-col relative overflow-hidden">
-          <div className="absolute top-0 right-0 bg-yellow-400 text-black text-xs font-bold px-3 py-1 rounded-bl-lg">
+        <div className="bg-primary text-primary-foreground relative flex flex-col overflow-hidden rounded-xl p-8 shadow-lg">
+          <div className="absolute top-0 right-0 rounded-bl-lg bg-yellow-400 px-3 py-1 text-xs font-bold text-black">
             ⭐ {yearly.offer_text}
           </div>
           <h3 className="text-2xl font-bold">{yearly.name}</h3>
@@ -192,25 +223,25 @@ export default function PricingPage() {
                 /{yearly.interval === "year" ? "year" : yearly.interval}
               </span>
             </div>
-            <div className="text-sm font-medium text-yellow-300 mt-1">
+            <div className="mt-1 text-sm font-medium text-yellow-300">
               Only ₹{Math.round(yearly.price / 12)}/month
             </div>
           </div>
-          <ul className="mt-8 space-y-4 flex-1">
+          <ul className="mt-8 flex-1 space-y-4">
             <li className="flex items-center gap-2">
-              <Check className="w-5 h-5 text-yellow-400" /> Save 25% vs Monthly
+              <Check className="h-5 w-5 text-yellow-400" /> Save 25% vs Monthly
             </li>
             <li className="flex items-center gap-2">
-              <Check className="w-5 h-5 text-yellow-400" /> All Pro features
+              <Check className="h-5 w-5 text-yellow-400" /> All Pro features
             </li>
             <li className="flex items-center gap-2">
-              <Check className="w-5 h-5 text-yellow-400" /> Priority Support
+              <Check className="h-5 w-5 text-yellow-400" /> Priority Support
             </li>
           </ul>
           <button
             onClick={() => handleAction(yearly)}
             disabled={loadingPlanId !== null}
-            className="mt-8 w-full py-3 rounded-lg bg-background text-foreground font-bold hover:bg-background/90 transition-colors disabled:opacity-70"
+            className="bg-background text-foreground hover:bg-background/90 mt-8 w-full rounded-lg py-3 font-bold transition-colors disabled:opacity-70"
           >
             {loadingPlanId === yearly.id
               ? "Processing..."

@@ -5,7 +5,6 @@ import {
 } from "@/actions/goals";
 import { GoalCard } from "@/components/goal-card";
 import { PlannerHeader } from "@/components/planner-header";
-import { Plus } from "lucide-react";
 import {
   getISOWeek,
   setISOWeek,
@@ -26,7 +25,7 @@ export default async function WeekPage({
   const displayYear = params.year ? parseInt(params.year) : today.getFullYear();
 
   // Robust week handling
-  let week = params.week ? parseInt(params.week) : getISOWeek(today);
+  const week = params.week ? parseInt(params.week) : getISOWeek(today);
   const filterId = params.filter || "all";
 
   // Construct a date object representing this week
@@ -55,7 +54,7 @@ export default async function WeekPage({
   })}`;
 
   return (
-    <div className="max-w-3xl mx-auto space-y-8 animate-fade-in-up">
+    <div className="animate-fade-in-up mx-auto max-w-3xl space-y-8">
       <div className="flex flex-col gap-4">
         <PlannerHeader
           type="week"
@@ -65,14 +64,14 @@ export default async function WeekPage({
         />
 
         {/* Context Filter Bar */}
-        <div className="flex flex-wrap items-center gap-2 bg-surface-container-low p-3 rounded-lg border border-outline-variant/30">
-          <span className="text-xs font-bold text-on-surface-variant uppercase tracking-wider mr-2">
+        <div className="bg-surface-container-low border-outline-variant/30 flex flex-wrap items-center gap-2 rounded-lg border p-3">
+          <span className="text-on-surface-variant mr-2 text-xs font-bold tracking-wider uppercase">
             Context:
           </span>
           <Link
             href={`?year=${displayYear}&week=${week}&filter=all`}
             scroll={false}
-            className={`px-3 py-1 rounded-full text-xs font-medium transition-colors border ${
+            className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
               filterId === "all"
                 ? "bg-primary text-on-primary border-primary"
                 : "bg-surface border-outline-variant hover:bg-surface-variant"
@@ -85,7 +84,7 @@ export default async function WeekPage({
               key={mg.id}
               href={`?year=${displayYear}&week=${week}&filter=${mg.id}`}
               scroll={false}
-              className={`px-3 py-1 rounded-full text-xs font-medium transition-colors border max-w-[200px] truncate ${
+              className={`max-w-[200px] truncate rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
                 filterId === mg.id
                   ? "bg-primary text-on-primary border-primary"
                   : "bg-surface border-outline-variant hover:bg-surface-variant"
@@ -120,13 +119,13 @@ export default async function WeekPage({
           />
         ))}
 
-        <div className="bg-surface-container p-4 rounded-xl">
+        <div className="bg-surface-container rounded-xl p-4">
           <form action={createWeeklyGoal} className="flex flex-col gap-3">
             <input type="hidden" name="year" value={displayYear} />
             <input type="hidden" name="week" value={week} />
 
             <div className="flex items-center gap-2">
-              <span className="text-xs text-on-surface-variant">
+              <span className="text-on-surface-variant text-xs">
                 Aligns with Month (
                 {new Date(displayYear, month - 1).toLocaleString("default", {
                   month: "short",
@@ -136,7 +135,7 @@ export default async function WeekPage({
               <select
                 name="monthly_goal_id"
                 defaultValue={filterId === "all" ? "null" : filterId} // Auto-select context
-                className="bg-transparent text-sm font-medium text-primary outline-none"
+                className="text-primary bg-transparent text-sm font-medium outline-none"
               >
                 <option value="null">None</option>
                 {monthlyGoals.map((mg) => (
@@ -151,11 +150,11 @@ export default async function WeekPage({
               <input
                 name="title"
                 placeholder="What needs to happen this week?"
-                className="flex-1 bg-transparent text-lg border-b border-transparent focus:border-primary outline-none"
+                className="focus:border-primary flex-1 border-b border-transparent bg-transparent text-lg outline-none"
                 required
                 autoFocus
               />
-              <button className="text-primary font-medium text-sm px-3 py-1 bg-primary/10 rounded-full hover:bg-primary/20">
+              <button className="text-primary bg-primary/10 hover:bg-primary/20 rounded-full px-3 py-1 text-sm font-medium">
                 Add
               </button>
             </div>
@@ -164,16 +163,16 @@ export default async function WeekPage({
       </section>
 
       {/* Link to Daily Plan */}
-      <div className="mt-12 p-6 bg-secondary-container rounded-2xl text-on-secondary-container">
-        <h3 className="text-title-medium font-bold mb-2">Ready to execute?</h3>
-        <p className="mb-4 text-body-medium opacity-80">
+      <div className="bg-secondary-container text-on-secondary-container mt-12 rounded-2xl p-6">
+        <h3 className="text-title-medium mb-2 font-bold">Ready to execute?</h3>
+        <p className="text-body-medium mb-4 opacity-80">
           Break these goals down into daily focus blocks.
         </p>
         <a
           href="/planner/day"
-          className="inline-flex px-6 py-2 bg-on-secondary-container text-secondary-container rounded-full font-bold text-sm hover:opacity-90 transition-opacity"
+          className="bg-on-secondary-container text-secondary-container inline-flex rounded-full px-6 py-2 text-sm font-bold transition-opacity hover:opacity-90"
         >
-          Go to Today's Plan
+          Go to Today&apos;s Plan
         </a>
       </div>
     </div>
