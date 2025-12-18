@@ -26,6 +26,7 @@ export function DashboardClient({
     weekly: DashboardGoal[];
     daily: DashboardGoal[];
   };
+  date?: string;
 }) {
   const [selectedYearId, setSelectedYearId] = useState<string | null>(null);
   const [selectedMonthId, setSelectedMonthId] = useState<string | null>(null);
@@ -33,7 +34,7 @@ export function DashboardClient({
   const [isPending, startTransition] = useTransition();
 
   // --- Today's Data Logic ---
-  const todayStr = new Date().toISOString().split("T")[0];
+  const todayStr = date || new Date().toISOString().split("T")[0];
   const todaysGoals = useMemo(
     () => initialData.daily.filter((g) => g.date_label === todayStr),
     [initialData.daily, todayStr]
