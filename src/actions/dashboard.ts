@@ -16,7 +16,10 @@ export type DashboardGoal = {
   yearly_goal_id?: string | null;
   monthly_goal_id?: string | null;
   weekly_goal_id?: string | null;
-  metadata?: any;
+  year?: number;
+  month?: number;
+  week?: number;
+  metadata?: Record<string, unknown> | null;
 };
 
 interface DashboardFilters {
